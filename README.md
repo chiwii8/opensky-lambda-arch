@@ -1,6 +1,6 @@
-# gh-activity-analytics-lambda
+# opensky-lambda-arch
 
-# Requisitos
+## Requisitos
 
 * **Ingesta**: Producer Kafka que lea de la API periódicamente o de un dataset estático simulando un flujo en tiempo real (emitiendo eventos poco a poco).
 * **Procesamiento**: Trabajo Spark Structured Streaming con ventanas temporales y al menos una agregación. Si lo consideráis adecuado, podéis utilizar otros motores como Kafka Streams o Apache Flink.
@@ -8,3 +8,7 @@
 * **Visualización**: Dashboard de Grafana con al menos 2 paneles.
 * **Infraestructura**: Todo desplegado con Docker Compose, integrado en la misma red.
 * **Documentación**: README con arquitectura, instrucciones de despliegue y decisiones de diseño. 
+
+## Arquitectura
+
+Para la realización de este proyecto se ha decidido utilizar una arquitectura Lambda.
