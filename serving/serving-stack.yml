@@ -1,0 +1,60 @@
+# Subfichero encargado de desplegar los contenedores para la capa de servicios
+
+# Contenedores:
+# - Cassandra
+# - Cassandra Web
+# Conjunto de IPs utilizadas .16 -.18 /24
+
+services:
+  cassandra:
+    image: cassandra:latest
+    container_name: cassandra
+    restart: always
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_CLUSTER_NAME: "IBD Cluster"
+      CASSANDRA_DC: dc1
+      CASSANDRA_RACK: rack1
+      HEAP_NEWSIZE: 128M
+      MAX_HEAP_SIZE: 512M
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster'"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    networks:
+      sky-net:
+        ipv4_address: 172.28.2.16
+
+  cassandra-web:
+    image: ipushc/cassandra-web:latest
+    container_name: cassandra-web
+    restart: always
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    ports:
+      - "8082:8083"
+    environment:
+      CASSANDRA_HOST: cassandra
+      CASSANDRA_PORT: 9042
+    networks:
+      sky-net:
+        ipv4_address: 172.28.2.17
+  
+  # Contenedor Auxiliar que nos ayuda a insertar las tablas en Cassandra
+  cassandra-init:
+    image: cassandra:latest
+    container_name: cassandra_init
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    volumes:
+      - ./cassandra/init.cql:/init.cql
+    command: /bin/bash -c "echo 'Cargando tablas...' && cqlsh cassandra -f /init.cql"
+    networks:
+      sky-net:
+        ipv4_address: 172.28.2.18
