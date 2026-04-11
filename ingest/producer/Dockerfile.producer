@@ -1,0 +1,31 @@
+# Instalamos una imagen de python de la versión 3.10
+# En esta imagen se pretende ejecutar el producer.
+FROM python:3.10-slim
+
+# Evita que Python genere archivos .pyc (ahorra espacio) 
+# y fuerza que los logs salgan por consola en tiempo real
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Instalamos dependencias de sistema mínimas si fueran necesarias
+# (En la mayoría de producers de Kafka no hace falta nada más)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libc-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copiamos e instalamos los requerimientos
+COPY producer/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiamos el resto del código del producer
+COPY producer/ .
+
+# Usuario no-root por seguridad
+RUN useradd -m myuser
+USER myuser
+
+# Ejecutamos el script
+CMD ["python", "producer.py"]
