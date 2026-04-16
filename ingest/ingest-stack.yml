@@ -70,6 +70,8 @@ services:
       KAFKA_BROKER: ${KAFKA_BROKER}
       KAFKA_TOPIC: ${KAFKA_TOPIC}
       OPENSKY_URI: ${OPENSKY_URI}
+      OPENSKY_SECRET: ${OPENSKY_SECRET}
+      OPENSKY_USER: ${OPENSKY_USER}
     networks:
       sky-net:
         ipv4_address: 172.28.2.12

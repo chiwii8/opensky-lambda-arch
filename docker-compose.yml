@@ -7,7 +7,7 @@ include:
   - ./ingest/ingest-stack.yml   # Capa de ingesta de Datos
   - ./speed/speed-stack.yml     # Capa de Streaming
   - ./serving/serving-stack.yml # Capa de Almacenamiento DB
-  # - ./batch/batch-stack.yml     # Capa de Batch, Habilitar cuando ya este funcionando la sección kappa.
+  # - ./batch/batch-stack.yml     # Capa de Batch, Posible ampliación si hay tiempo
 
 
 name: opensky
