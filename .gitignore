@@ -1,1 +1,6 @@
 .env
+
+# Descomentar si hay ampliación a arquitectura Lambda
+batch/
+
+credentials.json
