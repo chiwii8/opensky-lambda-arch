@@ -16,17 +16,7 @@ CREATE TABLE IF NOT EXISTS live_flights (
     velocity double,
     on_ground boolean,
     last_update timestamp
-);
-
-
--- En esta tabla se almacenan los datos por horas, en las que se realizará una medición del número de aviones que hubo por el páis en cada hora
-CREATE TABLE IF NOT EXISTS hourly_stats_by_country (
-    day date,
-    hour int,
-    country text,
-    flight_count counter,
-    PRIMARY KEY ((day), hour, country)
-) WITH CLUSTERING ORDER BY (hour DESC, country ASC);
+) WITH default_time_to_live = 120;
 
 
 -- Filtrado de los aviones que van a tener una baja latitud(Despiegue o aterrizaje) para poder medir el uso apropiado de la altura ideal
