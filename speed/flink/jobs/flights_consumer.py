@@ -37,8 +37,8 @@ class CassandraSinkMapFunction:
             # Preparamos las sentencias
             self.insert_live = self.session.prepare("""
                 INSERT INTO live_flights 
-                (icao24, callsign, origin_country, longitude, latitude, altitude, on_ground, velocity) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (icao24, callsign, origin_country, longitude, latitude, altitude, on_ground, velocity, last_update) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, toTimestamp(now()))
             """)
 
             self.insert_alert = self.session.prepare("""
