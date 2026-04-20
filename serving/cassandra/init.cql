@@ -26,4 +26,4 @@ CREATE TABLE IF NOT EXISTS flight_alerts (
     altitude double,
     PRIMARY KEY (alert_type, ts)
 ) WITH CLUSTERING ORDER BY (ts DESC)
-  WITH default_time_to_live = 30;
+  AND default_time_to_live = 30;
