@@ -72,6 +72,10 @@ services:
       OPENSKY_URI: ${OPENSKY_URI}
       OPENSKY_SECRET: ${OPENSKY_SECRET}
       OPENSKY_USER: ${OPENSKY_USER}
+      LAMIN: ${LAMIN}
+      LOMIN: ${LOMIN}
+      LAMAX: ${LAMAX}
+      LOMAX: ${LOMAX}
     networks:
       sky-net:
         ipv4_address: 172.28.2.12

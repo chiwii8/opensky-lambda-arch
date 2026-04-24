@@ -22,6 +22,14 @@ services:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
       GF_INSTALL_PLUGINS: hadesarchitect-cassandra-datasource # Se añade el plugin para usar cassandra
+      # Variables de entorno utilizadas en la configuración del provisioning
+
+      CASSANDRA_KEYSPACE: ${CASSANDRA_KEYSPACE}
+      CASSANDRA_URL: ${CASSANDRA_URL}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      # Cargamos el conjunto de datos que tenemos
+      - ./grafana/provisioning:/etc/grafana/provisioning
     networks:
       sky-net:
         ipv4_address: 172.28.2.40     # Debería ser la última IP del sistema utilizada
@@ -36,3 +44,4 @@ networks:
 volumes:
   kafka-data:
   cassandra-data:
+  grafana-data:
