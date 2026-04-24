@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS live_flights (
     last_update timestamp
 ) WITH default_time_to_live = 120;
 
--- Filtrado de los aviones que van a tener una baja latitud(Despiegue o aterrizaje) para poder medir el uso apropiado de la altura ideal
+-- Filtrado de los aviones que van a tener una baja altitud(Despiegue o aterrizaje) para poder medir el uso apropiado de la altura ideal
 CREATE TABLE IF NOT EXISTS flight_alerts (
     alert_type text, -- Ej: 'LOW_ALTITUDE', 'HIGH_SPEED'
     ts timestamp,
@@ -26,4 +26,4 @@ CREATE TABLE IF NOT EXISTS flight_alerts (
     altitude double,
     PRIMARY KEY (alert_type, ts)
 ) WITH CLUSTERING ORDER BY (ts DESC)
-  AND default_time_to_live = 30;
+  AND default_time_to_live = 300;
