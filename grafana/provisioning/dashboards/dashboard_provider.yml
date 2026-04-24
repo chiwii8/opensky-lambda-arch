@@ -1,0 +1,10 @@
+apiVersion: 1
+
+providers:
+  - name: 'Vuelos En Tiempo Real' # Nombre interno en Grafana
+    uid: ffj59p1czpvr4d
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards # Carpeta donde están los .json DENTRO del contenedor
