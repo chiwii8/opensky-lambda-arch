@@ -1,0 +1,105 @@
+# En este fichero se realizará el despliegue de los servicios que actualmente no existan en la red actual de OpenStack
+# Por ello se despliega lo siguiente:
+# Apache Flink
+
+# Se reserva el Conjunto de IPS .50 - .59 para la realización de este ejercicio
+#Plantilla de variables para las imagenes de apache flink
+x-flink-env:  &flink-env
+  KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+  KAFKA_TOPIC: ${KAFKA_TOPIC}
+  CASSANDRA_HOST: ${CASSANDRA_HOST}
+  CASSANDRA_KEYSPACE: ${CASSANDRA_KEYSPACE}
+
+
+services:
+  # Producer de Kafka
+  kafka-producer-proyect:
+    build:
+      context:  ./ingest/
+      dockerfile: producer/Dockerfile.producer
+    container_name: kafka-producer-proyect
+    restart: always
+    environment:      # Variables de entorno requeridas para ejecutar el script
+      KAFKA_BROKER: ${KAFKA_BROKER}
+      KAFKA_TOPIC: ${KAFKA_TOPIC}
+      OPENSKY_URI: ${OPENSKY_URI}
+      OPENSKY_SECRET: ${OPENSKY_SECRET}
+      OPENSKY_USER: ${OPENSKY_USER}
+      LAMIN: ${LAMIN}
+      LOMIN: ${LOMIN}
+      LAMAX: ${LAMAX}
+      LOMAX: ${LOMAX}
+    networks:
+      hadoopnet:
+        ipv4_address: 172.28.1.50
+    # Apache Flink jobmanager y taskmanager
+  
+  flink-job:
+    build:
+      context: ./speed/
+      dockerfile: flink/Dockerfile
+    container_name: flink-jobmanager
+    restart: always
+    ports:
+      - '8085:8081' # Interfaz web de flink
+    volumes:
+      - ./flink/consumer:/opt/flink/usrlib # Montamos la carpeta consumer para su uso en Dev
+    command: jobmanager
+    environment:
+      <<: *flink-env
+      FLINK_PROPERTIES: |
+          jobmanager.rpc.address: flink-jobmanager
+  
+    networks:
+      hadoopnet:
+        ipv4_address: 172.28.1.51
+
+  
+  flink-task:
+    build:
+      context: ./speed/
+      dockerfile: flink/Dockerfile
+    container_name: flink-taskmanager
+    restart: always
+    depends_on:
+      - flink-job
+    command: taskmanager
+    volumes:
+      - ./flink:/opt/flink/usrlib
+    networks:
+      hadoopnet:
+        ipv4_address: 172.28.1.52
+    environment:
+      <<: *flink-env
+      FLINK_PROPERTIES: |
+          jobmanager.rpc.address: flink-jobmanager
+          taskmanager.numberOfTaskSlots: 2
+          parallelism.default: 2
+
+  # Servicio momentaneo para enviar el Trabajo a los contenedores de flink
+  flink-job-submitter-proyect:
+    build:
+      context: ./speed/
+      dockerfile: flink/Dockerfile
+    container_name: flink-job-submitter-proyect
+    depends_on:
+      flink-job:
+        condition: service_started
+    # Este comando es la clave:
+    command: >
+      bash -c "sleep 15 && 
+               flink run -d -m flink-jobmanager:8081 -py /opt/flink/usrlib/flights_consumer.py"
+    volumes:
+      - ./flink/jobs:/opt/flink/usrlib
+    networks:
+      hadoopnet: 
+        ipv4_address: 172.28.1.53
+    environment:
+      <<: *flink-env
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+
+networks:
+  hadoopnet:
+    external: true
+    name: hadoop_hadoopnet

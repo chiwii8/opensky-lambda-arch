@@ -1,0 +1,53 @@
+x-flink-env:  &flink-env
+  KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+  KAFKA_TOPIC: ${KAFKA_TOPIC}
+  CASSANDRA_HOST: ${CASSANDRA_HOST}
+  CASSANDRA_KEYSPACE: ${CASSANDRA_KEYSPACE}
+
+services:
+  # Producer de Kafka
+  kafka-producer-proyect:
+    build:
+      context:  ./ingest/
+      dockerfile: producer/Dockerfile.producer
+    container_name: kafka-producer-proyect
+    restart: always
+    environment:      # Variables de entorno requeridas para ejecutar el script
+      KAFKA_BROKER: ${KAFKA_BROKER}
+      KAFKA_TOPIC: ${KAFKA_TOPIC}
+      OPENSKY_URI: ${OPENSKY_URI}
+      OPENSKY_SECRET: ${OPENSKY_SECRET}
+      OPENSKY_USER: ${OPENSKY_USER}
+      LAMIN: ${LAMIN}
+      LOMIN: ${LOMIN}
+      LAMAX: ${LAMAX}
+      LOMAX: ${LOMAX}
+    networks:
+      hadoopnet:
+        ipv4_address: 172.28.1.50
+
+  # Servicio momentaneo para enviar el Trabajo a los contenedores de flink
+  flink-job-submitter-proyect:
+    build:
+      context: ./speed/
+      dockerfile: flink/Dockerfile
+    container_name: flink-job-submitter-proyect
+    # Este comando es la clave:
+    command: >
+      bash -c "sleep 15 && 
+               flink run -d -m flink-jobmanager:8081 -py /opt/flink/usrlib/flights_consumer.py"
+    volumes:
+      - ./speed/flink/jobs:/opt/flink/usrlib
+    networks:
+      hadoopnet: 
+        ipv4_address: 172.28.1.53
+    environment:
+      <<: *flink-env
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+
+
+networks:
+  hadoopnet:
+    external: true
+    name: hadoop_hadoopnet
