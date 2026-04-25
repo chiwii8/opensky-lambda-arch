@@ -45,6 +45,8 @@ El proyecto implementa una Arquitectura Kappa, diseñada para procesar datos de 
 
 ## Guía de Configuración
 
+Es necesario estar ubicado en la raíz del proyecto para la realización de los pasos posteriores.
+
 ### Requisitos previos
 
 * Docker
@@ -112,6 +114,117 @@ Una vez iniciado el docker-compose, el consumer y producer se ejecutan automáti
     ---------------------------------------
 
 ## Despliegue en OpenStack
+
+### Creación del Esquema de Cassandra
+
+Actualmente el contenedor de Cassandra está desplegado para la realización de actividades anteriores, por lo que únicamente hay que crear el esquema de datos que se va a utilizar
+
+```bash
+
+cd .\serving\cassandra\
+docker exec -i cassandra cqlsh < setup_cassandra.cql
+
+```
+
+### Ejecutar Sección Streaming
+
+Es posible que el esquema de Apache Flink no haya sido desplegado si es la primera vez que se usa, por lo que se puede usar el fichero **docker-compose-kappa.yml** para el despliegue de los contenedores restantes.
+
+```
+# Ubicado en el directorio raíz del proyecto
+docker compose -f docker-compose-kappa.yml up -d
+
+# Alternativa con make(Construye y ejecuta en Dettach mode el código)
+make build-kappa
+```
+
+
+### Ejecución del Productor y Consumidor
+
+En caso de que ya se disponga de un contenedor Apache Flink desplegado únicamente es necesario el despliegue del productor y consumidor, para ello se usa el fichero **docker-compose-prodCon.yml** y únicamente se levantarán los servicios de productor y el creador del job.
+
+```
+# Ubicado en el directorio raíz del proyecto
+docker compose -f docker-compose-prodCon.yml up
+```
+
+### Configuración Datasource
+ Se configura el datasource de forma que acepte cualquier keyspace por si se está compartiendo con  otros keyspace de otros dashboards. En principio debería estar creado
+
+ * Host: cassandra:9042
+ * Keyspace: En blanco
+
+
+### Importar el Dashboard
+Dentro de la carpeta grafana -> import. Se ubica el dashboard a importar, simplemente se importa y se puede observar los datos que se han cargado actualmente. Existe la posibilidad dependiendo de la configuración o el planteamiento realizado con el Datasource falle, por lo que debería únicamente recargar las visiones que requiera.
+
+
+### Puertos Habilitados
+
+    ---------------------------------------
+    |     Servicio      |     Puerto      |
+    ---------------------------------------
+    |   Redpanda        |      8090       |
+    ---------------------------------------
+    |   Apache Flink    |      8085       |
+    ---------------------------------------
+    |  Cassandra-web    |      8084       |
+    ---------------------------------------
+    |   Grafana         |      3000       |
+    ---------------------------------------
+
+
+## En caso de Cierre de Socket
+
+Se ha encontrado un problema y es que tras determinado tiempo de ejecución en la máquina de Openstack deja de funcionar los producer, habría que reiniciar el producer
+
+```
+# Entras dentro de la consola del contenedor
+docker compose exec kafka-producer-proyect bash
+
+# Cierras cualquier posible proceso que se haya quedado pillado del script del consumer
+# Ctrl + c
+
+# Vuelves a iniciar el consumer para que vuelva a suscribirse
+python producer.py
+
+# Cierra la consola y observa que empiezan a llegar peticiones 
+```
+
+## Comandos Makefile
+```
+help: ## show the help
+	@echo " Available Commands:"
+	@echo " make up				- Start the stack in dettach mode"
+	@echo " make up-kappa		- Start the aditional stack in dettach mode"
+	@echo " make build			- Build and start the stack in dettach mode"
+	@echo " make build-kappa	- Build and start the aditional stack in dettach mode"
+	@echo " make down			- Stop and delete the stack"
+	@echo " make down-kappa		- Build and start the aditional stack in dettach mode"
+	@echo " make undeploy   	- Stop and delete the stack with the volume created"
+
+
+up:
+	docker compose up -d
+
+up-kappa:
+	docker compose -f docker-compose-kappa.yml up -d 
+
+build: 
+	docker compose up -d --build
+
+build-kappa:
+	docker compose -f docker-compose-kappa.yml up -d --build
+
+down:
+	docker compose down
+
+down-kappa:
+	docker compose -f docker-compose-kappa.yml down
+
+undeploy:
+	docker compose down -v
+```
 
 ## Decisiones de Diseño
 
